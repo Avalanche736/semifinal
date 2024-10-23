@@ -111,6 +111,8 @@ def turn_right(x):
         elif ostatok > 60:
             x += 90 - ostatok
 
+    print(f"check x {x}")
+
     return requests.post(f"http://{robot_ip}/move", json={"id": id, "direction": "right", "len": x})
 
 
