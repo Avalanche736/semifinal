@@ -71,11 +71,9 @@ def main():
     # move_forward()
     # turn_left()
     # # turn_180()
-    for i in range(10):
+    for i in range(1):
         read_sensors()
-        print(sensors)
-        turn_result = turn_right(90)
-        print(turn_result)
+        print(move_forward(50))
         sleep(2)
 
 
