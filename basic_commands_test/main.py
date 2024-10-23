@@ -74,7 +74,9 @@ def main():
     for i in range(10):
         read_sensors()
         print(sensors)
-        turn_right(90)
+        turn_result = turn_right(90)
+        print(turn_result)
+        print(turn_result.json())
         sleep(2)
 
 
