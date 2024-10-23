@@ -16,13 +16,13 @@ answer = [[0 for i in range(cols)] for j in range(rows)]
 
 normal_angle = 0
 
-robot_ip = "x"
+robot_ip = "192.168.68.187"
 
 sensors = 0
 
 zero_angle = 0
 
-id = 1234
+id = "3536AF962E7A4A53"
 
 move_forward_distance = 180
 
@@ -123,6 +123,30 @@ def turn_left(x):
 
 def drive_pwm(pwm_l, time_l, pwm_r, time_r):
     return requests.post(f"http://{robot_ip}/motor", json={"id": id, "l": pwm_l, "r": pwm_r, "l_time": time_l, "r_time": time_r})
+
+
+def pwm_turn_right():
+    global sensors
+    read_sensors()
+    # TODO ПРОВЕРКА НАЧАЛЬНОГО УГЛА
+    initial_angle = get_labirint_angle()
+    drive_pwm(200, 0.2, -200, 0.2)
+    sleep(0.2)
+    drive_pwm(0, 1, 0, 1)
+    sleep(1)
+    read_sensors()
+    print(f"initial {initial_angle} current {get_labirint_angle()}")
+    while (get_labirint_angle() + 360 - initial_angle) % 360 != 90:
+        if (get_labirint_angle() + 360 - initial_angle) % 360 < 90:
+            drive_pwm(80, 0.2, -80, 0.2)
+        else:
+            drive_pwm(-80, 0.2, 80, 0.2)
+        sleep(0.2)
+        drive_pwm(0, 0.2, 0, 0.2)
+        sleep(0.2)
+        read_sensors()
+        print(f"current {get_labirint_angle()} diff {get_labirint_angle() + 360 - initial_angle}")
+
 
 
 def check_if_done():
