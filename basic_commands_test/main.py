@@ -80,7 +80,7 @@ def main():
 
 def read_sensors():
     global sensors
-    sensors = requests.post(f"http://{robot_ip}/sensor", json={"id": "123456", "type": "all"}).json()
+    sensors = requests.post(f"http://{robot_ip}/sensor", json={"id": id, "type": "all"}).json()
 
 
 def manage_zero_angle():
