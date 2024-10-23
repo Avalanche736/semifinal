@@ -113,7 +113,7 @@ def turn_right(x):
 
     print(f"check x {x}")
 
-    return requests.post(f"http://{robot_ip}/move", json={"id": id, "direction": "right", "len": x},
+    return requests.put(f"http://{robot_ip}/move", json={"id": id, "direction": "right", "len": x},
                          headers={'Content-Type': 'application/json'})
 
 
