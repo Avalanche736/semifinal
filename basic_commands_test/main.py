@@ -29,40 +29,40 @@ move_forward_distance = 180
 def main():
     # Use a breakpoint in the code line below to debug your script.
 
-    global normal_angle
-    while not check_if_done():
-        read_sensors()
-        walls_by_robot = detect_walls(sensors)
-        if visited_cells[current_coordinates[0]][current_coordinates[1]] == 0:
-            visited_cells[current_coordinates[0]][current_coordinates[1]] = 1
-            # print(f"walls_by_robot {walls_by_robot}")
-        if not walls_by_robot[1]:
-            turn_right(90)
-            normal_angle = (normal_angle + 90) % 360
-        elif not walls_by_robot[0]:
-            pass
-        elif not walls_by_robot[3]:
-            turn_left(90)
-            normal_angle = (normal_angle + 270) % 360
-        else:
-            turn_right(180)
-            normal_angle = (normal_angle + 180) % 360
-
-        move_forward(move_forward_distance)
-
-        if normal_angle == 0:
-            current_coordinates[0] -= 1
-        elif normal_angle == 90:
-            current_coordinates[1] += 1
-        elif normal_angle == 180:
-            current_coordinates[0] += 1
-        elif normal_angle == 270:
-            current_coordinates[1] -= 1
-
-        if (current_coordinates[0] == 7 or current_coordinates[0] == 8) \
-                and (current_coordinates[1] == 7 or current_coordinates[1] == 8):
-            break
-        print(sensors)
+    # global normal_angle
+    # while not check_if_done():
+    #     read_sensors()
+    #     walls_by_robot = detect_walls(sensors)
+    #     if visited_cells[current_coordinates[0]][current_coordinates[1]] == 0:
+    #         visited_cells[current_coordinates[0]][current_coordinates[1]] = 1
+    #         # print(f"walls_by_robot {walls_by_robot}")
+    #     if not walls_by_robot[1]:
+    #         turn_right(90)
+    #         normal_angle = (normal_angle + 90) % 360
+    #     elif not walls_by_robot[0]:
+    #         pass
+    #     elif not walls_by_robot[3]:
+    #         turn_left(90)
+    #         normal_angle = (normal_angle + 270) % 360
+    #     else:
+    #         turn_right(180)
+    #         normal_angle = (normal_angle + 180) % 360
+    #
+    #     move_forward(move_forward_distance)
+    #
+    #     if normal_angle == 0:
+    #         current_coordinates[0] -= 1
+    #     elif normal_angle == 90:
+    #         current_coordinates[1] += 1
+    #     elif normal_angle == 180:
+    #         current_coordinates[0] += 1
+    #     elif normal_angle == 270:
+    #         current_coordinates[1] -= 1
+    #
+    #     if (current_coordinates[0] == 7 or current_coordinates[0] == 8) \
+    #             and (current_coordinates[1] == 7 or current_coordinates[1] == 8):
+    #         break
+    #     print(sensors)
 
     # sleep(0.33)
     # print(get_sensor_data())
@@ -71,6 +71,11 @@ def main():
     # move_forward()
     # turn_left()
     # # turn_180()
+    for i in range(10):
+        read_sensors()
+        print(sensors)
+        turn_right(90)
+        sleep(2)
 
 
 def read_sensors():
