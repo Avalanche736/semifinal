@@ -71,10 +71,11 @@ def main():
     # move_forward()
     # turn_left()
     # # turn_180()
-    for i in range(1):
+    for i in range(10):
         read_sensors()
-        print(move_forward(50))
-        sleep(2)
+        sleep(1)
+        print(turn_right(90))
+        sleep(1)
 
 
 def read_sensors():
@@ -102,17 +103,18 @@ def move_backward(x):
 
 
 def turn_right(x):
-    labirint_angle = get_labirint_angle()
-    ostatok = labirint_angle % 90
-    if ostatok != 0:
-        if ostatok < 30:
-            x -= ostatok
-        elif ostatok > 60:
-            x += 90 - ostatok
+    # labirint_angle = get_labirint_angle()
+    # ostatok = labirint_angle % 90
+    # if ostatok != 0:
+    #     if ostatok < 30:
+    #         x -= ostatok
+    #     elif ostatok > 60:
+    #         x += 90 - ostatok
 
     print(f"check x {x}")
 
-    return requests.post(f"http://{robot_ip}/move", json={"id": id, "direction": "right", "len": f"{x}"})
+    return requests.post(f"http://{robot_ip}/move", json={"id": id, "direction": "right", "len": x},
+                         headers={'Content-Type': 'application/json'})
 
 
 def turn_left(x):
