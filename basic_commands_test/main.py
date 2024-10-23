@@ -76,7 +76,6 @@ def main():
         print(sensors)
         turn_result = turn_right(90)
         print(turn_result)
-        print(turn_result.json())
         sleep(2)
 
 
@@ -115,7 +114,7 @@ def turn_right(x):
 
     print(f"check x {x}")
 
-    return requests.post(f"http://{robot_ip}/move", json={"id": id, "direction": "right", "len": x})
+    return requests.post(f"http://{robot_ip}/move", json={"id": id, "direction": "right", "len": f"{x}"})
 
 
 def turn_left(x):
