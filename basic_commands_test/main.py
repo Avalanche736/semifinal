@@ -26,56 +26,104 @@ id = "3536AF962E7A4A53"
 
 move_forward_distance = 180
 
+mts_govno = True
+
+
 def main():
-    # Use a breakpoint in the code line below to debug your script.
-
-    # global normal_angle
-    # while not check_if_done():
-    #     read_sensors()
-    #     walls_by_robot = detect_walls(sensors)
-    #     if visited_cells[current_coordinates[0]][current_coordinates[1]] == 0:
-    #         visited_cells[current_coordinates[0]][current_coordinates[1]] = 1
-    #         # print(f"walls_by_robot {walls_by_robot}")
-    #     if not walls_by_robot[1]:
-    #         turn_right(90)
-    #         normal_angle = (normal_angle + 90) % 360
-    #     elif not walls_by_robot[0]:
-    #         pass
-    #     elif not walls_by_robot[3]:
-    #         turn_left(90)
-    #         normal_angle = (normal_angle + 270) % 360
-    #     else:
-    #         turn_right(180)
-    #         normal_angle = (normal_angle + 180) % 360
-    #
-    #     move_forward(move_forward_distance)
-    #
-    #     if normal_angle == 0:
-    #         current_coordinates[0] -= 1
-    #     elif normal_angle == 90:
-    #         current_coordinates[1] += 1
-    #     elif normal_angle == 180:
-    #         current_coordinates[0] += 1
-    #     elif normal_angle == 270:
-    #         current_coordinates[1] -= 1
-    #
-    #     if (current_coordinates[0] == 7 or current_coordinates[0] == 8) \
-    #             and (current_coordinates[1] == 7 or current_coordinates[1] == 8):
-    #         break
-    #     print(sensors)
-
-    # sleep(0.33)
-    # print(get_sensor_data())
-    # for i in range(30):
-    #     turn_right()
-    # move_forward()
-    # turn_left()
-    # # turn_180()
-    for i in range(10):
+    global mts_govno
+    while mts_govno:
         read_sensors()
-        sleep(1)
-        print(turn_right(90))
-        sleep(1)
+        manage_movement()
+
+
+# go forward maintaining right sensor distance variables
+forward_typical_pwm = 150
+target_right_sensor_value = 65
+go_forward_sampling_time = 0.2
+
+angle_coefficient_proportional = 1
+angle_coefficient_derivative = 1
+angle_coefficient_integral = 1
+angle_error = 0
+angle_error_derivative = 0
+angle_error_integral = 0
+adjustment_value_angle = 0
+
+right_sensor_coefficient_proportional = 1
+right_sensor_coefficient_derivative = 1
+right_sensor_coefficient_integral = 1
+right_sensor_error = 0
+right_sensor_error_derivative = 0
+right_sensor_error_integral = 0
+adjustment_value_right_sensor = 0
+
+
+# called from manage_movement()
+def go_forward_adjusting_by_angle_and_right_sensor():
+    global forward_typical_pwm, target_right_sensor_value, sensors
+
+    global angle_coefficient_proportional, angle_coefficient_derivative, angle_coefficient_integral, \
+        angle_error, angle_error_derivative, angle_error_integral, adjustment_value_angle
+
+    global right_sensor_coefficient_proportional, right_sensor_coefficient_derivative, right_sensor_coefficient_integral, \
+        right_sensor_error, right_sensor_error_derivative, right_sensor_error_integral, adjustment_value_right_sensor
+
+    right_sensor_distance = sensors['laser']['5']
+    current_angle = get_labyrinth_angle()
+
+    # adjustment by angle
+    angle_error_derivative = (((current_angle + 45) % 90 - 45) - angle_error) / go_forward_sampling_time
+    angle_error = (current_angle + 45) % 90 - 45  # (current_angle + 45) % 90 - 45 - это ж просто шедевр
+    angle_error_integral += angle_error * go_forward_sampling_time
+
+    adjustment_value_angle = angle_error * angle_coefficient_proportional + \
+                             angle_error_derivative * angle_coefficient_derivative + \
+                             angle_error_integral * angle_coefficient_integral
+
+    # adjustment by right_sensor
+    right_sensor_error_derivative = ((target_right_sensor_value - right_sensor_distance) - right_sensor_error) / go_forward_sampling_time
+    right_sensor_error = target_right_sensor_value - right_sensor_distance
+    right_sensor_error_integral += right_sensor_error * go_forward_sampling_time
+
+    adjustment_value_right_sensor = right_sensor_error * right_sensor_coefficient_proportional + \
+                             right_sensor_error_derivative * right_sensor_coefficient_derivative + \
+                             right_sensor_error_integral * right_sensor_coefficient_integral
+
+    left_pwm = forward_typical_pwm + adjustment_value_angle - adjustment_value_right_sensor
+    right_pwm = forward_typical_pwm - adjustment_value_angle + adjustment_value_right_sensor
+
+    drive_pwm(left_pwm, go_forward_sampling_time, right_pwm, go_forward_sampling_time)
+    sleep(go_forward_sampling_time)
+
+
+len_kletka = 168
+len_robot = 88
+
+
+def manage_movement():
+    global len_kletka, len_robot
+    right_sensor_distances = sensors['laser']['5']
+    forw_sensor_distances = sensors['laser']['4']
+    left_sensor_distances = sensors['laser']['2']
+
+    if right_sensor_distances > len_kletka:
+        move_forward(len_kletka // 2)
+        turn_right(90)
+        move_forward(140)
+
+    elif forw_sensor_distances > len_kletka:
+        go_forward_adjusting_by_angle_and_right_sensor()
+
+    elif left_sensor_distances > len_kletka:
+        move_forward(140)
+        turn_left(90)
+        move_forward(180)
+    else:
+        move_forward(len_kletka // 2)
+        turn_left(90)
+        move_forward(len_kletka // 2)
+        turn_left(90)
+
 
 
 def read_sensors():
@@ -90,16 +138,16 @@ def manage_zero_angle():
     zero_angle = sensors['imu']['yaw']
 
 
-def get_labirint_angle():
+def get_labyrinth_angle():
     return (sensors['imu']['yaw'] + 360 - zero_angle) % 360
 
 
 def move_forward(x):
-    return requests.post(f"http://{robot_ip}/move", json={"id": id, "direction": "forward", "len": x})
+    return requests.put(f"http://{robot_ip}/move", json={"id": id, "direction": "forward", "len": x})
 
 
 def move_backward(x):
-    return requests.post(f"http://{robot_ip}/move", json={"id": id, "direction": "backward", "len": x})
+    return requests.put(f"http://{robot_ip}/move", json={"id": id, "direction": "backward", "len": x})
 
 
 def turn_right(x):
@@ -118,7 +166,7 @@ def turn_right(x):
 
 
 def turn_left(x):
-    labirint_angle = get_labirint_angle()
+    labirint_angle = get_labyrinth_angle()
     ostatok = labirint_angle % 90
     if ostatok != 0:
         if ostatok < 30:
@@ -126,26 +174,26 @@ def turn_left(x):
         elif ostatok > 60:
             x -= 90 - ostatok
 
-    return requests.post(f"http://{robot_ip}/move", json={"id": id, "direction": "left", "len": x})
+    return requests.put(f"http://{robot_ip}/move", json={"id": id, "direction": "left", "len": x})
 
 
 def drive_pwm(pwm_l, time_l, pwm_r, time_r):
-    return requests.post(f"http://{robot_ip}/motor", json={"id": id, "l": pwm_l, "r": pwm_r, "l_time": time_l, "r_time": time_r})
+    return requests.put(f"http://{robot_ip}/motor", json={"id": id, "l": pwm_l, "r": pwm_r, "l_time": time_l, "r_time": time_r})
 
 
 def pwm_turn_right():
     global sensors
     read_sensors()
     # TODO ПРОВЕРКА НАЧАЛЬНОГО УГЛА
-    initial_angle = get_labirint_angle()
+    initial_angle = get_labyrinth_angle()
     drive_pwm(200, 0.2, -200, 0.2)
     sleep(0.2)
     drive_pwm(0, 1, 0, 1)
     sleep(1)
     read_sensors()
-    print(f"initial {initial_angle} current {get_labirint_angle()}")
-    while (get_labirint_angle() + 360 - initial_angle) % 360 != 90:
-        if (get_labirint_angle() + 360 - initial_angle) % 360 < 90:
+    print(f"initial {initial_angle} current {get_labyrinth_angle()}")
+    while (get_labyrinth_angle() + 360 - initial_angle) % 360 != 90:
+        if (get_labyrinth_angle() + 360 - initial_angle) % 360 < 90:
             drive_pwm(80, 0.2, -80, 0.2)
         else:
             drive_pwm(-80, 0.2, 80, 0.2)
@@ -153,7 +201,7 @@ def pwm_turn_right():
         drive_pwm(0, 0.2, 0, 0.2)
         sleep(0.2)
         read_sensors()
-        print(f"current {get_labirint_angle()} diff {get_labirint_angle() + 360 - initial_angle}")
+        print(f"current {get_labyrinth_angle()} diff {get_labyrinth_angle() + 360 - initial_angle}")
 
 
 
@@ -169,7 +217,7 @@ def check_if_done():
 
 def detect_walls(sensor_data):
     # округлить угол до десятков
-    rounded_angle = round(get_labirint_angle(), -1)
+    rounded_angle = round(get_labyrinth_angle(), -1)
 
     # print(f"rounded angle {rounded_angle}")
 
